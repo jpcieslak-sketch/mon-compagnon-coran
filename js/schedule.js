@@ -144,29 +144,32 @@ const Schedule = (() => {
       }
     }
 
-    /* 3. Révisions du jour : issues de la semaine type (répartition récurrente) */
+    /* 3. Révisions du jour : issues de la semaine type — la totalité des sourates connues est répartie sur les 7 jours */
     const weekdayIdx = (fromISO(dateISO).getDay() + 6) % 7; /* 0 = lundi */
-    const all = weekTemplate(state)[weekdayIdx] || [];
-    const maxRev = Math.max(2, Math.min(10, Math.round((state.profile.capacity.minutes || 15) / 5)));
-    tasks.revisions = all.slice(0, maxRev);
-    tasks.revisionsOverflow = Math.max(0, all.length - tasks.revisions.length);
+    tasks.revisions = weekTemplate(state)[weekdayIdx] || [];
+    tasks.revisionsOverflow = 0;
     return tasks;
   }
 
-  /* Semaine type : répartition récurrente des sourates connues sur les 7 jours (lundi→dimanche).
-     Fréquence selon le niveau de maîtrise : fraîche = tous les jours, bien maîtrisée = 1 fois/semaine. */
+  /* Semaine type : la totalité des sourates connues est répartie sur les 7 jours (lundi→dimanche).
+     Fréquence selon le niveau de maîtrise : fraîche = tous les jours, bien maîtrisée = 1 fois/semaine.
+     Les répétitions sont espacées régulièrement (pas deux fois le même jour). */
   function weekTemplate(state) {
     const days = [[], [], [], [], [], [], []];
     const freqOf = lvl => (lvl >= 6 ? 1 : lvl >= 4 ? 2 : lvl >= 2 ? 3 : 7);
     const known = Object.keys(state.surahs).map(Number)
       .filter(id => state.surahs[id].status === ST.KNOWN)
       .sort((a, b) => (state.surahs[a].level - state.surahs[b].level) || (a - b));
-    const presets = { 7: [0, 1, 2, 3, 4, 5, 6], 3: [0, 2, 4], 2: [0, 3], 1: [0] };
     let rot = 0;
     for (const id of known) {
       const f = freqOf(state.surahs[id].level);
-      const dayIdx = f === 7 ? presets[7] : presets[f].map(x => (x + rot) % 7);
-      dayIdx.forEach(d => days[d].push(id));
+      const used = new Set();
+      for (let k = 0; k < f; k++) {
+        let d = Math.round(rot + k * (7 / f)) % 7;
+        while (used.has(d)) d = (d + 1) % 7;
+        used.add(d);
+        days[d].push(id);
+      }
       rot = (rot + 1) % 7;
     }
     return days;

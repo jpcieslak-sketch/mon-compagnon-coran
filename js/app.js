@@ -394,8 +394,10 @@
     $("#set-listen").value = p.capacity.listen;
     $("#set-read").value = p.capacity.read;
     $("#set-ayahs").value = p.capacity.ayahsPerPart;
+    $("#set-minutes").value = p.capacity.minutes;
+    $("#set-goal").value = p.goalPerWeek;
     $("#set-notify").classList.toggle("done", p.reminders.enabled);
-    ["#set-name", "#set-morning", "#set-evening", "#set-listen", "#set-read", "#set-ayahs"].forEach(sel =>
+    ["#set-name", "#set-morning", "#set-evening", "#set-listen", "#set-read", "#set-ayahs", "#set-minutes", "#set-goal"].forEach(sel =>
       $(sel).onchange = () => {
         p.name = $("#set-name").value.trim();
         p.reminders.morning = $("#set-morning").value || p.reminders.morning;
@@ -403,6 +405,8 @@
         p.capacity.listen = Math.max(1, Number($("#set-listen").value) || 5);
         p.capacity.read = Math.max(1, Number($("#set-read").value) || 10);
         p.capacity.ayahsPerPart = Math.max(1, Number($("#set-ayahs").value) || 10);
+        p.capacity.minutes = Math.max(5, Number($("#set-minutes").value) || 15);
+        p.goalPerWeek = Math.max(1, Number($("#set-goal").value) || 1);
         Store.save();
       });
     $("#set-notify").onclick = () => {
