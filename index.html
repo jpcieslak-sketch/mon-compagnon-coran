@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="css/style.css?v=6">
+  <link rel="stylesheet" href="css/style.css?v=7">
 </head>
 <body>
 
@@ -100,7 +100,7 @@
     <!-- Étape 4 : objectifs & calendrier -->
     <section class="ob-step hidden" data-step="4">
       <h2>Objectifs & calendrier</h2>
-      <label>Nouvelles sourates à mémoriser par semaine</label>
+      <label>Nouvelles lignes par semaine <span class="small">(sourates ou portions que tu démarres)</span></label>
       <input id="ob-goal" type="number" min="1" max="7" value="1">
       <label>Jour du cours hebdomadaire</label>
       <select id="ob-weekday">
@@ -206,12 +206,16 @@
         <h2>⚙️ Réglages</h2>
         <label>Ton prénom</label>
         <input id="set-name" type="text">
-        <label>Écoutes par jour</label>
+        <label>Écoutes par jour <span class="small">(séance d'apprentissage)</span></label>
         <input id="set-listen" type="number" min="1" max="20">
-        <label>Lectures par jour</label>
+        <label>Lectures par jour <span class="small">(séance d'apprentissage)</span></label>
         <input id="set-read" type="number" min="1" max="20">
         <label>Versets par séance d'apprentissage</label>
         <input id="set-ayahs" type="number" min="1" max="100">
+        <label>⏳ Minutes de travail par jour</label>
+        <input id="set-minutes" type="number" min="5" max="120">
+        <label>🎯 Nouvelles lignes par semaine <span class="small">(sourates ou portions que tu démarres)</span></label>
+        <input id="set-goal" type="number" min="1" max="7">
         <label>Notif du matin</label>
         <input id="set-morning" type="time">
         <label>Bilan du soir</label>
@@ -251,10 +255,10 @@
     </nav>
   </div>
 
-  <script src="js/data.js?v=6"></script>
-  <script src="js/store.js?v=6"></script>
-  <script src="js/schedule.js?v=6"></script>
+  <script src="js/data.js?v=7"></script>
+  <script src="js/store.js?v=7"></script>
+  <script src="js/schedule.js?v=7"></script>
   <script>window.__quranJSok = (typeof Schedule !== "undefined" && typeof Store !== "undefined");</script>
-  <script src="js/app.js?v=6"></script>
+  <script src="js/app.js?v=7"></script>
 </body>
 </html>

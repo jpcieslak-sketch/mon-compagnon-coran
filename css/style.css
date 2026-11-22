@@ -175,3 +175,6 @@ input[type="checkbox"] { width: auto; }
 #tabbar button.active { color: var(--emerald); font-weight: 700; }
 
 @media (min-width: 700px) { .surah-grid { max-height: 60vh; } }
+
+/* Annotation discrète dans les libellés */
+label span.small { font-size: .78rem; opacity: .65; display: block; }

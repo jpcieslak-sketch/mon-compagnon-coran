@@ -1,8 +1,8 @@
 /* Service worker : cache hors-ligne + notifications */
-const CACHE = "quran-hifz-v6";
+const CACHE = "quran-hifz-v7";
 const ASSETS = [
   "./", "./index.html", "./manifest.webmanifest",
-  "./css/style.css?v=6", "./js/data.js?v=6", "./js/store.js?v=6", "./js/schedule.js?v=6", "./js/app.js?v=6",
+  "./css/style.css?v=7", "./js/data.js?v=7", "./js/store.js?v=7", "./js/schedule.js?v=7", "./js/app.js?v=7",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"
 ];
 
