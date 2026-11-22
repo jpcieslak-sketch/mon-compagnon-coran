@@ -8,7 +8,7 @@ const Store = (() => {
     profile: {
       name: "",
       motivation: { why: "", importance: "", who: "", stress: "", expectations: "" },
-      capacity: { listen: 3, read: 5, minutes: 15 },   // fois/jour et minutes/jour
+      capacity: { listen: 5, read: 10, minutes: 15, ayahsPerPart: 10 },   // fois/jour, minutes/jour, versets/séance
       goalPerWeek: 1,                                   // nouvelles sourates / portions par semaine
       courseWeekday: 4,                                 // jeudi
       yearStart: null,                                  // "2026-10-01"
