@@ -23,7 +23,8 @@ const Schedule = (() => {
   /* Génère les jours de cours (un par semaine, sur le jour paramétré) pour l'année */
   function generateCourseDays(state) {
     const { start, end } = yearRange(state);
-    const wd = state.profile.courseWeekday;
+    const wd = (state.profile.courseWeekday ?? 4) % 7;
+    if (start >= end) return [];
     let d = fromISO(start);
     while (d.getDay() !== wd) d.setDate(d.getDate() + 1);
     const days = [];
@@ -64,18 +65,67 @@ const Schedule = (() => {
     s.nextDue = addDays(today(), REVIEW_INTERVALS[lvl]);
   }
 
-  /* Oubli déclaré : repart de zéro */
+  /* Oubli déclaré : repart dans la file d'apprentissage (oubliées d'abord) */
   function reviewForgot(state, id) {
     const s = surahState(state, id);
     s.level = 0;
-    s.status = ST.LEARNING;
+    s.status = ST.FORGOTTEN;
     s.lastReviewed = today();
     s.nextDue = null;
   }
 
+  /* ---------- File d'apprentissage (oubliées d'abord, puis objectifs) ---------- */
+  function queue(state) {
+    const forgotten = [], goals = [];
+    SURAHS.forEach(s => {
+      const st = state.surahs[s.id] ? state.surahs[s.id].status : ST.NONE;
+      if (st === ST.FORGOTTEN) forgotten.push(s.id);
+      else if (st === ST.GOAL) goals.push(s.id);
+    });
+    return forgotten.concat(goals).map(id => ({ surahId: id, forgotten: forgotten.includes(id) }));
+  }
+
+  /* Portion en cours d'apprentissage : la prochaine assignation de cours non apprise */
+  function currentAssignment(state, dateISO) {
+    const dates = Object.keys(state.calendar).filter(d =>
+      d >= dateISO && state.calendar[d].course && state.calendar[d].assignment && !state.calendar[d].assignment.done
+    ).sort();
+    if (!dates.length) return null;
+    const d = dates[0];
+    const a = state.calendar[d].assignment;
+    return { date: d, surahId: a.surahId, from: a.from, to: a.to };
+  }
+
+  /* Remplissage automatique du programme annuel avec les sourates/versets à apprendre */
+  function planAutoFill(state, dateISO) {
+    const partSize = Math.max(1, (state.profile.capacity && state.profile.capacity.ayahsPerPart) || 10);
+    const dates = Object.keys(state.calendar).filter(d =>
+      d >= dateISO && state.calendar[d].course && !state.calendar[d].assignment
+    ).sort();
+    let placed = 0;
+    for (const d of dates) {
+      const q = queue(state);
+      if (!q.length) break;
+      /* prochaine sourate de la file non encore (entièrement) planifiée */
+      let target = null, fromV = 1;
+      for (const item of q) {
+        const future = Object.values(state.calendar)
+          .map(c => c.assignment).filter(a => a && a.surahId === item.surahId && !a.done);
+        const lastTo = future.reduce((m, a) => Math.max(m, a.to || SURAHS[item.surahId - 1].ayahs), 0);
+        if (lastTo < SURAHS[item.surahId - 1].ayahs) { target = item; fromV = lastTo + 1; break; }
+      }
+      if (!target) break;
+      const total = SURAHS[target.surahId - 1].ayahs;
+      const toV = Math.min(fromV + partSize - 1, total);
+      state.calendar[d].assignment = { surahId: target.surahId, from: fromV, to: toV };
+      placed++;
+    }
+    return placed;
+  }
+
   /* ---------- Tâches du jour ---------- */
   function dailyTasks(state, dateISO) {
-    const tasks = { memorization: null, revisions: [], course: null };
+    const tasks = { memorization: null, revisions: [], course: null, assignment: currentAssignment(state, dateISO) };
 
     /* 1. Cours : portion assignée à cette date */
     const cal = state.calendar[dateISO];
@@ -83,25 +133,43 @@ const Schedule = (() => {
       tasks.course = { date: dateISO, assignment: cal.assignment || null };
     }
 
-    /* 2. Mémorisation en cours */
-    const learning = Object.keys(state.surahs).filter(id => state.surahs[id].status === ST.LEARNING);
-    if (learning.length) {
-      const id = Math.min(...learning.map(Number));
-      tasks.memorization = { surahId: id };
+    /* 2. Mémorisation : portion assignée pour le prochain cours, sinon sourate en cours */
+    if (tasks.assignment) {
+      tasks.memorization = { surahId: tasks.assignment.surahId, from: tasks.assignment.from, to: tasks.assignment.to, date: tasks.assignment.date };
+    } else {
+      const learning = Object.keys(state.surahs).filter(id => state.surahs[id].status === ST.LEARNING);
+      if (learning.length) {
+        const id = Math.min(...learning.map(Number));
+        tasks.memorization = { surahId: id };
+      }
     }
 
-    /* 3. Révisions dues (plafonnées selon la capacité du jour) */
-    const maxRev = Math.max(2, Math.min(8, Math.round(state.profile.capacity.minutes / 5)));
-    const due = Object.keys(state.surahs)
-      .map(Number)
-      .filter(id => {
-        const s = state.surahs[id];
-        return s.status === ST.KNOWN && s.nextDue && s.nextDue <= dateISO;
-      })
-      .sort((a, b) => (state.surahs[a].nextDue < state.surahs[b].nextDue ? -1 : 1));
-    tasks.revisions = due.slice(0, maxRev);
-    tasks.revisionsOverflow = due.length - tasks.revisions.length;
+    /* 3. Révisions du jour : issues de la semaine type (répartition récurrente) */
+    const weekdayIdx = (fromISO(dateISO).getDay() + 6) % 7; /* 0 = lundi */
+    const all = weekTemplate(state)[weekdayIdx] || [];
+    const maxRev = Math.max(2, Math.min(10, Math.round((state.profile.capacity.minutes || 15) / 5)));
+    tasks.revisions = all.slice(0, maxRev);
+    tasks.revisionsOverflow = Math.max(0, all.length - tasks.revisions.length);
     return tasks;
+  }
+
+  /* Semaine type : répartition récurrente des sourates connues sur les 7 jours (lundi→dimanche).
+     Fréquence selon le niveau de maîtrise : fraîche = tous les jours, bien maîtrisée = 1 fois/semaine. */
+  function weekTemplate(state) {
+    const days = [[], [], [], [], [], [], []];
+    const freqOf = lvl => (lvl >= 6 ? 1 : lvl >= 4 ? 2 : lvl >= 2 ? 3 : 7);
+    const known = Object.keys(state.surahs).map(Number)
+      .filter(id => state.surahs[id].status === ST.KNOWN)
+      .sort((a, b) => (state.surahs[a].level - state.surahs[b].level) || (a - b));
+    const presets = { 7: [0, 1, 2, 3, 4, 5, 6], 3: [0, 2, 4], 2: [0, 3], 1: [0] };
+    let rot = 0;
+    for (const id of known) {
+      const f = freqOf(state.surahs[id].level);
+      const dayIdx = f === 7 ? presets[7] : presets[f].map(x => (x + rot) % 7);
+      dayIdx.forEach(d => days[d].push(id));
+      rot = (rot + 1) % 7;
+    }
+    return days;
   }
 
   /* ---------- Progression ---------- */
@@ -136,8 +204,28 @@ const Schedule = (() => {
     return days;
   }
 
+  /* Portion apprise : met à jour l'assignation et le statut de la sourate */
+  function portionDone(state, dateISO) {
+    const a = state.calendar[dateISO] && state.calendar[dateISO].assignment;
+    if (!a) return null;
+    a.done = true;
+    const ayahs = SURAHS[a.surahId - 1].ayahs;
+    const coversAll = (a.from ?? 1) <= 1 && (a.to ?? ayahs) >= ayahs;
+    setStatus(state, a.surahId, coversAll ? ST.KNOWN : ST.LEARNING);
+    return { surahId: a.surahId, coversAll };
+  }
+
+  /* Étiquette d'une portion (ex. "Ad-Duha, versets 1–5") */
+  function portionLabel(id, from, to) {
+    const s = SURAHS[id - 1];
+    if (from && to) return s.name + ", versets " + from + "–" + to;
+    if (from) return s.name + ", versets " + from + "–" + s.ayahs;
+    return s.name;
+  }
+
   return { toISO, fromISO, today, addDays, daysBetween, frenchDate, yearRange, generateCourseDays,
-           surahState, setStatus, reviewDone, reviewForgot, dailyTasks, progression, streak, weekPlan };
+           surahState, setStatus, reviewDone, reviewForgot, dailyTasks, progression, streak, weekPlan,
+           queue, currentAssignment, planAutoFill, portionDone, weekTemplate, portionLabel };
 })();
 
 if (typeof module !== "undefined") { module.exports = { Schedule }; }

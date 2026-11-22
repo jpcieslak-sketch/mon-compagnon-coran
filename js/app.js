@@ -68,9 +68,10 @@
       p.motivation.importance = $("#ob-importance").value.trim();
       p.motivation.who = $("#ob-who").value.trim();
       p.motivation.expectations = p.motivation.who;
-      p.capacity.listen = Math.max(1, Number($("#ob-listen").value) || 3);
-      p.capacity.read = Math.max(1, Number($("#ob-read").value) || 5);
+      p.capacity.listen = Math.max(1, Number($("#ob-listen").value) || 5);
+      p.capacity.read = Math.max(1, Number($("#ob-read").value) || 10);
       p.capacity.minutes = Math.max(5, Number($("#ob-minutes").value) || 15);
+      p.capacity.ayahsPerPart = Math.max(1, Number($("#ob-ayahs").value) || 10);
       p.goalPerWeek = Math.max(1, Number($("#ob-goal").value) || 1);
       p.courseWeekday = Number($("#ob-weekday").value);
       const ym = $("#ob-start").value;
@@ -127,16 +128,18 @@
     }
 
     if (tasks.memorization) {
-      const s = SURAHS[tasks.memorization.surahId - 1];
-      html += `<div class="card"><h3>🧠 Mémorisation</h3>
-        <div class="sub">${s.name} — <span class="d-arl">${s.ar}</span></div>
-        <div class="ob-quote small">${esc(METHOD_STEPS[2])}</div>
-        <div class="check-row"><label style="margin:0"><input type="checkbox" id="chk-listen" ${log.listen ? "checked" : ""}> Écoutée ${state.profile.capacity.listen}× aujourd'hui</label></div>
-        <div class="check-row"><label style="margin:0"><input type="checkbox" id="chk-read" ${log.read ? "checked" : ""}> Lue ${state.profile.capacity.read}× aujourd'hui</label></div>
-        <div class="check-row"><label style="margin:0"><input type="checkbox" id="chk-recited" ${log.recited ? "checked" : ""}> Récitée sans regarder ✓</label></div>
+      const m = tasks.memorization;
+      const s = SURAHS[m.surahId - 1];
+      const label = (m.from || m.to) ? Schedule.portionLabel(m.surahId, m.from, m.to) : s.name;
+      const when = m.date ? (m.date === t ? " — cours aujourd'hui" : " — pour le cours du " + Schedule.frenchDate(m.date)) : "";
+      html += `<div class="card"><h3>🧠 Apprentissage de la semaine</h3>
+        <div class="sub">${esc(label)}` + `<span class="d-arl"> ${s.ar}</span>` + esc(when) + `</div>
+        <div class="ob-quote small">${esc(METHOD_STEPS[0] + " · " + METHOD_STEPS[1])}</div>
+        <div class="check-row"><label style="margin:0"><input type="checkbox" id="chk-listen" ${log.listen ? "checked" : ""}> 🎧 Écoutée ${state.profile.capacity.listen}× aujourd'hui</label></div>
+        <div class="check-row"><label style="margin:0"><input type="checkbox" id="chk-read" ${log.read ? "checked" : ""}> 📖 Lue ${state.profile.capacity.read}× aujourd'hui</label></div>
+        <div class="check-row"><label style="margin:0"><input type="checkbox" id="chk-recited" ${log.recited ? "checked" : ""}> 🗣️ Récitée sans regarder ✓</label></div>
         <div class="task-actions">
-          <button class="btn small primary" id="btn-memorized">Sourate mémorisée ✅</button>
-          <button class="btn small" id="btn-pause">En pause</button>
+          <button class="btn small primary" id="btn-portion">Portion apprise ✅</button>
         </div></div>`;
     } else {
       const nextGoal = SURAHS.find(s => {
@@ -151,13 +154,12 @@
     }
 
     if (tasks.revisions.length) {
-      html += `<div class="card"><h3>🔁 Révisions du jour${log.revisions ? " ✅" : ""}</h3>` +
+      html += `<div class="card"><h3>🔁 Révisions du jour${log.revisions ? " ✅" : ""}</h3><div class="sub">Semaine type — ancrer ce que tu connais</div>` +
         tasks.revisions.map(id => {
           const s = SURAHS[id - 1];
-          const ss = state.surahs[id];
-          return `<div class="check-row"><span style="flex:1"><span class="d-arl">${s.ar}</span> ${esc(s.name)} <span class="sub">(niv. ${ss.level})</span></span>
+          return `<div class="check-row"><span style="flex:1"><span class="d-arl">${s.ar}</span> ${esc(s.name)}</span>
             <button class="btn small" data-rev="${id}">✓</button>
-            <button class="btn small danger" data-forgot="${id}">✗</button></div>`;
+            <button class="btn small danger" data-forgot="${id}">oubliée !</button></div>`;
         }).join("") +
         (tasks.revisionsOverflow > 0 ? `<div class="sub">+ ${tasks.revisionsOverflow} plus tard dans la semaine</div>` : "") +
         `</div>`;
@@ -184,12 +186,13 @@
         Store.save();
       };
     });
-    if ($("#btn-memorized")) $("#btn-memorized").onclick = () => {
-      Schedule.setStatus(state, mem.surahId, ST.KNOWN);
-      Store.save(); renderToday();
-    };
-    if ($("#btn-pause")) $("#btn-pause").onclick = () => {
-      Schedule.setStatus(state, mem.surahId, ST.GOAL);
+    if ($("#btn-portion")) $("#btn-portion").onclick = () => {
+      if (mem.date && state.calendar[mem.date] && state.calendar[mem.date].assignment) {
+        Schedule.portionDone(state, mem.date);
+      } else {
+        Schedule.setStatus(state, mem.surahId, ST.KNOWN);
+      }
+      state.logs[t] = state.logs[t] || {}; state.logs[t].recited = true;
       Store.save(); renderToday();
     };
     if ($("#btn-start")) $("#btn-start").onclick = () => {
@@ -222,8 +225,9 @@
     state.logs[t] = state.logs[t] || {};
     const log = state.logs[t];
     const items = [
-      ["listen", "🎧 Écoutes de la day'ah faites"],
-      ["read", "📖 Lectures faites"],
+      ["listen", "🎧 Écoutes de la portion faites"],
+      ["read", "📖 Lectures de la portion faites"],
+      ["portion", "🧠 Apprentissage de la semaine travaillé"],
       ["recited", "🗣️ Récitée sans regarder"],
       ["prayed", "🕌 Récitée dans la prière"],
       ["revisions", "🔁 Révisions faites"]
@@ -258,6 +262,11 @@
   function renderCalendar() {
     Schedule.generateCourseDays(state);
     Store.save();
+    const q = Schedule.queue(state);
+    const hint = q.length
+      ? `Prochaine à apprendre : <b>${esc(SURAHS[q[0].surahId - 1].name)}</b> (${SURAHS[q[0].surahId - 1].ayahs} versets)`
+      : "Aucune sourate en file — choisis-en dans l'onglet Sourates";
+    $("#cal-hint").innerHTML = hint;
     const { start, end } = Schedule.yearRange(state);
     const monthsHTML = [];
     let d = Schedule.fromISO(start);
@@ -287,20 +296,39 @@
       const btn = e.target.closest(".day-cell");
       if (btn) openCalendarEditor(btn.dataset.date);
     };
+    $("#btn-autofill").onclick = () => {
+      const n = Schedule.planAutoFill(state, Schedule.today());
+      Store.save();
+      renderCalendar();
+      alert(n ? n + " séance(s) planifiée(s) ✅" : "Rien à planifier : définis d'abord tes sourates (onglet Sourates)." );
+    };
   }
 
   function openCalendarEditor(iso) {
     $("#cal-editor-date").textContent = Schedule.frenchDate(iso);
     const c = state.calendar[iso] || { course: false, assignment: null };
     $("#cal-course").checked = !!c.course;
-    $("#cal-surah").innerHTML = SURAHS.map(s => `<option value="${s.id}">${s.id}. ${esc(s.name)}</option>`).join("");
+    /* préremplir avec la prochaine sourate de la file (oubliées d'abord) */
+    const q = Schedule.queue(state);
+    const nextId = q.length ? q[0].surahId : 1;
+    $("#cal-surah").innerHTML = SURAHS.map(s => `<option value="${s.id}">${s.id}. ${esc(s.name)} (${s.ayahs} v.)</option>`).join("");
     if (c.assignment) {
       $("#cal-surah").value = c.assignment.surahId;
       $("#cal-from").value = c.assignment.from || "";
       $("#cal-to").value = c.assignment.to || "";
-    } else { $("#cal-from").value = ""; $("#cal-to").value = ""; }
+    } else {
+      $("#cal-surah").value = nextId;
+      $("#cal-from").value = "";
+      $("#cal-to").value = "";
+    }
     $("#cal-editor").classList.remove("hidden");
     $("#cal-cancel").onclick = () => $("#cal-editor").classList.add("hidden");
+    $("#cal-erase").onclick = () => {
+      state.calendar[iso] = { course: false, assignment: null };
+      Store.save();
+      $("#cal-editor").classList.add("hidden");
+      renderCalendar();
+    };
     $("#cal-save").onclick = () => {
       state.calendar[iso] = {
         course: $("#cal-course").checked,
@@ -316,17 +344,43 @@
     };
   }
 
-  /* ================= Semaine + méthode ================= */
+  /* ================= Semaine / parcours / méthode ================= */
   function renderWeek() {
+    /* Programme des 7 prochains jours */
     const plan = Schedule.weekPlan(state);
     $("#week-plan").innerHTML = plan.map(d => {
       const parts = [];
-      if (d.tasks.memorization) parts.push("🧠 " + SURAHS[d.tasks.memorization.surahId - 1].name);
+      if (d.tasks.memorization) {
+        const m = d.tasks.memorization;
+        parts.push("🧠 " + Schedule.portionLabel(m.surahId, m.from, m.to));
+      }
       if (d.tasks.revisions.length) parts.push(`🔁 ${d.tasks.revisions.length} révision(s)`);
       if (d.tasks.course) parts.push("🕌 cours");
       return `<div class="card"><h3 style="font-size:.95rem">${Schedule.frenchDate(d.iso)}${d.iso === Schedule.today() ? " — aujourd'hui" : ""}</h3>
         <div class="sub">${parts.length ? parts.join(" · ") : "repos / avance libre"}</div></div>`;
     }).join("");
+
+    /* Parcours d'apprentissage : d'abord les oubliées, puis les objectifs */
+    const q = Schedule.queue(state);
+    $("#parcours-list").innerHTML = q.length ? q.map(item => {
+      const s = SURAHS[item.surahId - 1];
+      const planned = Object.keys(state.calendar).filter(d =>
+        d >= Schedule.today() && state.calendar[d].assignment && !state.calendar[d].assignment.done && state.calendar[d].assignment.surahId === item.surahId
+      ).sort();
+      const when = planned.length ? ` — ${esc(Schedule.portionLabel(item.surahId, state.calendar[planned[0]].assignment.from, state.calendar[planned[0]].assignment.to))} le ${Schedule.frenchDate(planned[0])}` : "";
+      return `<div class="check-row"><span style="flex:1"><span class="chip ${item.forgotten ? "forgotten" : "goal"}">${item.forgotten ? "oubliée" : "objectif"}</span> ${esc(s.name)}${when}</span></div>`;
+    }).join("") : `<div class="empty">Aucun objectif pour l'instant — définis tes sourates dans l'onglet Sourates.</div>`;
+
+    /* Semaine type des révisions (sourates connues, répartition récurrente) */
+    const wt = Schedule.weekTemplate(state);
+    const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+    const hasKnown = wt.some(d => d.length);
+    $("#week-template").innerHTML = hasKnown ? dayNames.map((n, i) => {
+      const list = wt[i];
+      return `<div class="check-row"><span style="display:inline-block;width:86px;color:var(--emerald-dark);font-weight:700">${n}</span>
+        <span style="flex:1">${list.length ? list.map(id => esc(SURAHS[id - 1].name)).join(" · ") : `<span class="sub">—</span>`}</span></div>`;
+    }).join("") : `<div class="empty">Les sourates connues apparaîtront ici, réparties automatiquement sur la semaine.</div>`;
+
     $("#method-card").innerHTML = `<ol>${METHOD_STEPS.map(m => `<li>${esc(m.slice(3))}</li>`).join("")}</ol>
       <p class="ob-quote small">${esc(HADITH_MOTIVATION)}</p>`;
   }
@@ -337,12 +391,18 @@
     $("#set-name").value = p.name || "";
     $("#set-morning").value = p.reminders.morning;
     $("#set-evening").value = p.reminders.evening;
+    $("#set-listen").value = p.capacity.listen;
+    $("#set-read").value = p.capacity.read;
+    $("#set-ayahs").value = p.capacity.ayahsPerPart;
     $("#set-notify").classList.toggle("done", p.reminders.enabled);
-    ["#set-name", "#set-morning", "#set-evening"].forEach(sel =>
+    ["#set-name", "#set-morning", "#set-evening", "#set-listen", "#set-read", "#set-ayahs"].forEach(sel =>
       $(sel).onchange = () => {
         p.name = $("#set-name").value.trim();
         p.reminders.morning = $("#set-morning").value || p.reminders.morning;
         p.reminders.evening = $("#set-evening").value || p.reminders.evening;
+        p.capacity.listen = Math.max(1, Number($("#set-listen").value) || 5);
+        p.capacity.read = Math.max(1, Number($("#set-read").value) || 10);
+        p.capacity.ayahsPerPart = Math.max(1, Number($("#set-ayahs").value) || 10);
         Store.save();
       });
     $("#set-notify").onclick = () => {
@@ -419,6 +479,15 @@
   }
 
   /* ================= Démarrage ================= */
+  function showError(e) {
+    const el = document.createElement("pre");
+    el.style.cssText = "margin:2rem;padding:1rem;background:#fff;border:2px solid #c62828;border-radius:12px;font:14px monospace;white-space:pre-wrap;color:#b71c1c;z-index:9999";
+    el.textContent = "Une erreur est survenue :\n" + (e && (e.message || e));
+    document.body.appendChild(el);
+  }
+  window.addEventListener("error", ev => showError(ev.error || ev.message));
+  window.addEventListener("unhandledrejection", ev => showError(ev.reason));
+
   function showOnboarding() {
     $("#onboarding").classList.remove("hidden");
     $("#app").classList.add("hidden");
@@ -426,10 +495,20 @@
   function startApp() {
     $("#onboarding").classList.add("hidden");
     $("#app").classList.remove("hidden");
-    renderToday();
+    try { renderToday(); } catch (e) { showError(e); }
     initNotifications();
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
   }
 
-  document.addEventListener("DOMContentLoaded", init);
+  function init() {
+    window.__quranJSok = true;
+    if (state.onboarded) { try { startApp(); } catch (e) { showError(e); showOnboarding(); } }
+    else showOnboarding();
+    try { initOnboarding(); } catch (e) { showError(e); }
+    try { initTabs(); } catch (e) { showError(e); }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    try { init(); } catch (e) { showError(e); }
+  });
 })();
