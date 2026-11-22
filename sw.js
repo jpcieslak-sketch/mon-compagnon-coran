@@ -1,5 +1,5 @@
 /* Service worker : cache hors-ligne + notifications */
-const CACHE = "quran-hifz-v1";
+const CACHE = "quran-hifz-v2";
 const ASSETS = [
   "./", "./index.html", "./manifest.webmanifest",
   "./css/style.css", "./js/data.js", "./js/store.js", "./js/schedule.js", "./js/app.js",

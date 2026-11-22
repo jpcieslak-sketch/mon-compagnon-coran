@@ -419,6 +419,15 @@
   }
 
   /* ================= Démarrage ================= */
+  function showError(e) {
+    const el = document.createElement("pre");
+    el.style.cssText = "margin:2rem;padding:1rem;background:#fff;border:2px solid #c62828;border-radius:12px;font:14px monospace;white-space:pre-wrap;color:#b71c1c;z-index:9999";
+    el.textContent = "Une erreur est survenue :\n" + (e && (e.message || e));
+    document.body.appendChild(el);
+  }
+  window.addEventListener("error", ev => showError(ev.error || ev.message));
+  window.addEventListener("unhandledrejection", ev => showError(ev.reason));
+
   function showOnboarding() {
     $("#onboarding").classList.remove("hidden");
     $("#app").classList.add("hidden");
@@ -426,10 +435,19 @@
   function startApp() {
     $("#onboarding").classList.add("hidden");
     $("#app").classList.remove("hidden");
-    renderToday();
+    try { renderToday(); } catch (e) { showError(e); }
     initNotifications();
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
   }
 
-  document.addEventListener("DOMContentLoaded", init);
+  function init() {
+    if (state.onboarded) { try { startApp(); } catch (e) { showError(e); showOnboarding(); } }
+    else showOnboarding();
+    try { initOnboarding(); } catch (e) { showError(e); }
+    try { initTabs(); } catch (e) { showError(e); }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    try { init(); } catch (e) { showError(e); }
+  });
 })();
