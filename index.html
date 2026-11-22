@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="css/style.css?v=7">
+  <link rel="stylesheet" href="css/style.css?v=8">
 </head>
 <body>
 
@@ -87,8 +87,8 @@
       <input id="ob-read" type="number" min="1" max="20" value="10">
       <label>Combien de minutes par jour peux-tu consacrer aux révisions ?</label>
       <input id="ob-minutes" type="number" min="5" max="60" value="15">
-      <label>Combien de versets par séance d'apprentissage ? (les longues sourates s'apprennent en plusieurs fois)</label>
-      <input id="ob-ayahs" type="number" min="1" max="100" value="10">
+      <label>Combien de lignes par séance d'apprentissage ? (les longues sourates s'apprennent en plusieurs fois — les versets sont déduits automatiquement)</label>
+      <input id="ob-ayahs" type="number" min="1" max="50" value="5">
       <p class="ob-quote small">La régularité avant tout : 10 à 15 minutes par jour valent mieux qu'une longue séance par semaine.</p>
       <div class="ob-nav">
         <button class="btn" data-obprev="2">Retour</button>
@@ -176,6 +176,7 @@
               <input id="cal-from" type="number" min="1" placeholder="1">
               <label>Verset fin</label>
               <input id="cal-to" type="number" min="1" placeholder="fin">
+              <p class="ob-hint" id="cal-linehint"></p>
               <p class="ob-hint">Exemple : Ad-Duha, versets 1 à 5 — le reste sera appris lors d'un cours suivant.</p>
             </div>
             <div class="ob-nav">
@@ -210,8 +211,8 @@
         <input id="set-listen" type="number" min="1" max="20">
         <label>Lectures par jour <span class="small">(séance d'apprentissage)</span></label>
         <input id="set-read" type="number" min="1" max="20">
-        <label>Versets par séance d'apprentissage</label>
-        <input id="set-ayahs" type="number" min="1" max="100">
+        <label>Lignes par séance d'apprentissage <span class="small">(les versets sont déduits selon la longueur des versets de chaque sourate)</span></label>
+        <input id="set-ayahs" type="number" min="1" max="50">
         <label>⏳ Minutes de travail par jour</label>
         <input id="set-minutes" type="number" min="5" max="120">
         <label>🎯 Nouvelles lignes par semaine <span class="small">(sourates ou portions que tu démarres)</span></label>
@@ -255,10 +256,10 @@
     </nav>
   </div>
 
-  <script src="js/data.js?v=7"></script>
-  <script src="js/store.js?v=7"></script>
-  <script src="js/schedule.js?v=7"></script>
+  <script src="js/data.js?v=8"></script>
+  <script src="js/store.js?v=8"></script>
+  <script src="js/schedule.js?v=8"></script>
   <script>window.__quranJSok = (typeof Schedule !== "undefined" && typeof Store !== "undefined");</script>
-  <script src="js/app.js?v=7"></script>
+  <script src="js/app.js?v=8"></script>
 </body>
 </html>
