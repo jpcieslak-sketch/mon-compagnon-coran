@@ -1,0 +1,177 @@
+/* Carnet de suivi du Coran — style */
+:root {
+  --emerald: #0f5e49;
+  --emerald-dark: #0a4234;
+  --cream: #faf7f0;
+  --sand: #f0e9da;
+  --gold: #c9a227;
+  --text: #21291f;
+  --muted: #6b7468;
+  --known: #2e7d32;
+  --forgotten: #c62828;
+  --goal: #1565c0;
+  --learning: #e65100;
+  --radius: 14px;
+  --shadow: 0 2px 10px rgba(15, 94, 73, .12);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: "Georgia", "Times New Roman", serif;
+  background: var(--cream);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+.hidden { display: none !important; }
+h1, h2, h3 { font-weight: 700; letter-spacing: .3px; }
+h2 { font-size: 1.25rem; margin: .4rem 0 .8rem; }
+h2.mt { margin-top: 1.6rem; }
+label { display: block; font-size: .9rem; color: var(--muted); margin: .8rem 0 .25rem; }
+input, select, textarea {
+  width: 100%; padding: .6rem .7rem; font: inherit;
+  border: 1px solid #d8d2c4; border-radius: 10px; background: #fff;
+}
+textarea { resize: vertical; }
+input[type="checkbox"] { width: auto; }
+
+/* Boutons */
+.btn {
+  display: inline-block; padding: .6rem 1.1rem; font: inherit; font-size: .95rem;
+  border: 1px solid #cfc8b8; border-radius: 999px; background: #fff;
+  color: var(--text); cursor: pointer; transition: transform .05s;
+}
+.btn:active { transform: scale(.97); }
+.btn.primary { background: var(--emerald); border-color: var(--emerald); color: #fff; }
+.btn.danger { background: #fbe9e7; border-color: #e53935; color: #b71c1c; }
+.btn.small { padding: .35rem .7rem; font-size: .85rem; }
+.btn.done { background: var(--emerald); color: #fff; border-color: var(--emerald); }
+
+/* Assistant */
+.ob-header { text-align: center; padding: 2.2rem 1rem .5rem; }
+.ob-logo {
+  width: 64px; height: 64px; margin: 0 auto .6rem; border-radius: 18px;
+  background: var(--emerald); color: #fff; font-size: 2rem; line-height: 64px;
+  box-shadow: var(--shadow);
+}
+.ob-header h1 { font-size: 1.35rem; margin: .2rem 0; color: var(--emerald-dark); }
+.ob-sub { color: var(--gold); font-family: "Amiri", "Traditional Arabic", serif; font-size: 1.2rem; margin: .1rem 0 0; }
+.ob-step { padding: 1rem 1.2rem 6rem; max-width: 560px; margin: 0 auto; }
+.ob-quote {
+  background: var(--sand); border-left: 4px solid var(--gold);
+  padding: .6rem .9rem; border-radius: 8px; font-style: italic; font-size: .95rem; margin: .6rem 0 1rem;
+}
+.ob-quote.small { font-size: .85rem; margin-top: 1rem; }
+.ob-hint { color: var(--muted); font-size: .85rem; margin: .4rem 0 1rem; }
+.ob-nav { display: flex; align-items: center; gap: .5rem; margin-top: 1.4rem; justify-content: flex-end; }
+.ob-nav .btn:first-child, .ob-nav button.btn { margin-right: auto; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #d8d2c4; }
+.dot.active { background: var(--emerald); }
+
+/* Grille des sourates */
+.surah-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: .45rem; margin-top: .8rem; max-height: 52vh; overflow-y: auto; padding: 2px;
+}
+.surah-cell {
+  position: relative; aspect-ratio: 1; border-radius: 10px; border: 1px solid #e3ddce;
+  background: #fff; font: inherit; font-size: .72rem; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  line-height: 1.15; padding: 2px; overflow: hidden;
+}
+.surah-cell .num { position: absolute; top: 2px; left: 4px; font-size: .6rem; color: var(--muted); }
+.surah-cell .nm { font-size: .64rem; text-align: center; padding: 0 1px; }
+.surah-cell .ar { font-size: .85rem; }
+.surah-cell.known { background: #e8f5e9; border-color: var(--known); }
+.surah-cell.forgotten { background: #ffebee; border-color: var(--forgotten); }
+.surah-cell.goal { background: #e3f2fd; border-color: var(--goal); }
+.surah-cell.learning { background: #fff3e0; border-color: var(--learning); }
+.chip {
+  display: inline-block; padding: .15rem .55rem; border-radius: 999px;
+  font-size: .75rem; border: 1px solid; margin-right: .3rem;
+}
+.chip.known { color: var(--known); border-color: var(--known); }
+.chip.forgotten { color: var(--forgotten); border-color: var(--forgotten); }
+.chip.goal { color: var(--goal); border-color: var(--goal); }
+.chip.learning { color: var(--learning); border-color: var(--learning); }
+.legend { margin: .6rem 0; }
+
+/* Application */
+#app { padding-bottom: 70px; }
+.screen { padding: 1rem 1.1rem 2rem; max-width: 580px; margin: 0 auto; }
+.today-date { color: var(--muted); font-size: .9rem; text-transform: capitalize; }
+.stat-row { display: flex; gap: .6rem; margin: .8rem 0 1rem; flex-wrap: wrap; }
+.stat {
+  flex: 1; min-width: 90px; background: #fff; border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: .6rem .5rem; text-align: center;
+}
+.stat .v { font-size: 1.3rem; font-weight: 700; color: var(--emerald-dark); }
+.stat .l { font-size: .72rem; color: var(--muted); }
+
+/* Cartes d'actions */
+.card {
+  background: #fff; border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: .9rem 1rem; margin-bottom: .9rem;
+}
+.card h3 { margin: 0 0 .5rem; font-size: 1.05rem; color: var(--emerald-dark); }
+.card .sub { color: var(--muted); font-size: .85rem; }
+.check-row { display: flex; align-items: center; gap: .5rem; padding: .3rem 0; font-size: .95rem; }
+.task-actions { display: flex; gap: .5rem; margin-top: .6rem; flex-wrap: wrap; }
+.dua-card {
+  background: var(--sand); border-radius: var(--radius); padding: .9rem 1rem;
+  margin-top: 1rem; text-align: center;
+}
+.dua-card .ar { font-size: 1.25rem; margin-bottom: .3rem; }
+.dua-card .fr { font-style: italic; font-size: .9rem; }
+.dua-card .src { color: var(--muted); font-size: .75rem; margin-top: .25rem; }
+.d-arl { font-family: "Amiri", "Traditional Arabic", "Segoe UI", serif; font-size: 1.05em; }
+.empty { color: var(--muted); text-align: center; padding: 1.2rem; font-style: italic; }
+
+/* Méthode */
+.method-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem; }
+.method-card ol { margin: .4rem 0 0 1.1rem; padding: 0; }
+.method-card li { margin: .35rem 0; font-size: .93rem; }
+
+/* Calendrier */
+.mm { margin-bottom: 1.2rem; }
+.mm h3 { color: var(--emerald-dark); margin: .4rem 0 .5rem; font-size: 1rem; text-transform: capitalize; }
+.day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.day-cell {
+  aspect-ratio: 1; border-radius: 8px; border: 1px solid #e3ddce; background: #fff;
+  font-size: .7rem; font-family: system-ui, sans-serif; cursor: pointer; position: relative;
+  display: flex; align-items: center; justify-content: center; padding: 0;
+}
+.day-cell:disabled { opacity: .35; cursor: default; }
+.day-cell.course { background: var(--emerald); color: #fff; border-color: var(--emerald); font-weight: 700; }
+.day-cell.course.off { background: #9aa79f; }
+.day-cell.has-assign::after {
+  content: "•"; position: absolute; bottom: 1px; right: 2px; color: var(--gold); font-size: .9rem;
+}
+.day-head { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; font-size: .6rem; color: var(--muted); text-align: center; }
+
+/* Modal */
+.modal {
+  position: fixed; inset: 0; background: rgba(20, 30, 25, .45);
+  display: flex; align-items: center; justify-content: center; z-index: 50; padding: 1rem;
+}
+.modal-box {
+  background: var(--cream); border-radius: 18px; padding: 1.2rem; width: 100%;
+  max-width: 420px; max-height: 86vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,.25);
+}
+.modal-box h3 { margin-top: 0; color: var(--emerald-dark); }
+.bilan-check { padding: .4rem 0; }
+
+/* Barre d'onglets */
+#tabbar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+  display: flex; background: #fff; border-top: 1px solid #e3ddce;
+  padding: .3rem .2rem calc(.3rem + env(safe-area-inset-bottom));
+}
+#tabbar button {
+  flex: 1; background: none; border: none; font: inherit; font-size: 1.15rem;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  color: var(--muted); cursor: pointer; padding: .25rem 0;
+}
+#tabbar button span { font-size: .64rem; }
+#tabbar button.active { color: var(--emerald); font-weight: 700; }
+
+@media (min-width: 700px) { .surah-grid { max-height: 60vh; } }
