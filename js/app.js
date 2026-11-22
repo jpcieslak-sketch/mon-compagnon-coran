@@ -321,12 +321,12 @@
       $("#cal-from").value = "";
       $("#cal-to").value = "";
     }
-    $("#cal-editor").classList.remove("hidden");
-    $("#cal-cancel").onclick = () => $("#cal-editor").classList.add("hidden");
+    $("#calendar-editor").classList.remove("hidden");
+    $("#cal-cancel").onclick = () => $("#calendar-editor").classList.add("hidden");
     $("#cal-erase").onclick = () => {
       state.calendar[iso] = { course: false, assignment: null };
       Store.save();
-      $("#cal-editor").classList.add("hidden");
+      $("#calendar-editor").classList.add("hidden");
       renderCalendar();
     };
     $("#cal-save").onclick = () => {
@@ -339,7 +339,7 @@
         } : null
       };
       Store.save();
-      $("#cal-editor").classList.add("hidden");
+      $("#calendar-editor").classList.add("hidden");
       renderCalendar();
     };
   }
