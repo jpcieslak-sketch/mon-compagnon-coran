@@ -441,6 +441,7 @@
   }
 
   function init() {
+    window.__quranJSok = true;
     if (state.onboarded) { try { startApp(); } catch (e) { showError(e); showOnboarding(); } }
     else showOnboarding();
     try { initOnboarding(); } catch (e) { showError(e); }
