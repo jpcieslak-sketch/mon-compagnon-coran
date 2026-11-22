@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body>
 
@@ -82,11 +82,13 @@
     <section class="ob-step hidden" data-step="3">
       <h2>Tes capacités et ton temps</h2>
       <label>Combien de fois par jour écouter la sourate ? (trajets, maison…)</label>
-      <input id="ob-listen" type="number" min="1" max="10" value="3">
+      <input id="ob-listen" type="number" min="1" max="20" value="5">
       <label>Combien de lectures par jour ? (matin, midi, soir…)</label>
-      <input id="ob-read" type="number" min="1" max="15" value="5">
+      <input id="ob-read" type="number" min="1" max="20" value="10">
       <label>Combien de minutes par jour peux-tu consacrer aux révisions ?</label>
       <input id="ob-minutes" type="number" min="5" max="60" value="15">
+      <label>Combien de versets par séance d'apprentissage ? (les longues sourates s'apprennent en plusieurs fois)</label>
+      <input id="ob-ayahs" type="number" min="1" max="100" value="10">
       <p class="ob-quote small">La régularité avant tout : 10 à 15 minutes par jour valent mieux qu'une longue séance par semaine.</p>
       <div class="ob-nav">
         <button class="btn" data-obprev="2">Retour</button>
@@ -159,7 +161,9 @@
       <!-- Calendrier -->
       <section id="screen-calendar" class="screen hidden">
         <h2>🗓️ Calendrier de l'année</h2>
-        <p class="ob-hint">Touche un jour de cours pour l'assigner ou le désactiver.</p>
+        <p class="ob-hint">Touche un jour de cours pour y placer une portion (une sourate peut s'apprendre en plusieurs fois : choisis les versets).</p>
+        <p class="ob-hint" id="cal-hint"></p>
+        <button id="btn-autofill" class="btn primary" style="width:100%">⏩ Remplir le programme automatiquement</button>
         <div id="calendar-months"></div>
         <div id="calendar-editor" class="modal hidden">
           <div class="modal-box">
@@ -168,12 +172,14 @@
             <div id="cal-assign-zone">
               <label>Sourate à préparer</label>
               <select id="cal-surah"></select>
-              <label>Verset début (optionnel)</label>
+              <label>Verset début</label>
               <input id="cal-from" type="number" min="1" placeholder="1">
-              <label>Verset fin (optionnel)</label>
+              <label>Verset fin</label>
               <input id="cal-to" type="number" min="1" placeholder="fin">
+              <p class="ob-hint">Exemple : Ad-Duha, versets 1 à 5 — le reste sera appris lors d'un cours suivant.</p>
             </div>
             <div class="ob-nav">
+              <button class="btn danger" id="cal-erase">Effacer</button>
               <button class="btn" id="cal-cancel">Annuler</button>
               <button class="btn primary" id="cal-save">Enregistrer</button>
             </div>
@@ -185,6 +191,12 @@
       <section id="screen-week" class="screen hidden">
         <h2>📋 Ma semaine</h2>
         <div id="week-plan"></div>
+        <h2 class="mt">🎓 Mon parcours d'apprentissage</h2>
+        <p class="ob-hint">D'abord les oubliées, puis les objectifs. Place-les dans le calendrier (onglet Année).</p>
+        <div id="parcours-list" class="card"></div>
+        <h2 class="mt">🔁 Semaine type des révisions</h2>
+        <p class="ob-hint">Les sourates connues, réparties automatiquement sur la semaine. Une sourate fraîchement mémorisée revient chaque jour ; une sourate solide, une fois par semaine.</p>
+        <div id="week-template" class="card"></div>
         <h2 class="mt">Méthode d'apprentissage</h2>
         <div id="method-card" class="method-card"></div>
       </section>
@@ -194,6 +206,12 @@
         <h2>⚙️ Réglages</h2>
         <label>Ton prénom</label>
         <input id="set-name" type="text">
+        <label>Écoutes par jour</label>
+        <input id="set-listen" type="number" min="1" max="20">
+        <label>Lectures par jour</label>
+        <input id="set-read" type="number" min="1" max="20">
+        <label>Versets par séance d'apprentissage</label>
+        <input id="set-ayahs" type="number" min="1" max="100">
         <label>Notif du matin</label>
         <input id="set-morning" type="time">
         <label>Bilan du soir</label>
@@ -233,10 +251,10 @@
     </nav>
   </div>
 
-  <script src="js/data.js?v=4"></script>
-  <script src="js/store.js?v=4"></script>
-  <script src="js/schedule.js?v=4"></script>
+  <script src="js/data.js?v=5"></script>
+  <script src="js/store.js?v=5"></script>
+  <script src="js/schedule.js?v=5"></script>
   <script>window.__quranJSok = (typeof Schedule !== "undefined" && typeof Store !== "undefined");</script>
-  <script src="js/app.js?v=4"></script>
+  <script src="js/app.js?v=5"></script>
 </body>
 </html>
