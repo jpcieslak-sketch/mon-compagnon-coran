@@ -8,7 +8,7 @@ const Store = (() => {
     profile: {
       name: "",
       motivation: { why: "", importance: "", who: "", stress: "", expectations: "" },
-      capacity: { listen: 5, read: 10, minutes: 15, ayahsPerPart: 10 },   // fois/jour, minutes/jour, versets/séance
+      capacity: { listen: 5, read: 10, minutes: 15, linesPerPart: 5 },   // fois/jour, minutes/jour, lignes/séance
       goalPerWeek: 1,                                   // nouvelles sourates / portions par semaine
       courseWeekday: 4,                                 // jeudi
       yearStart: null,                                  // "2026-10-01"
@@ -28,6 +28,12 @@ const Store = (() => {
       if (raw) {
         state = Object.assign(DEFAULT_STATE(), JSON.parse(raw));
         state.profile = Object.assign(DEFAULT_STATE().profile, state.profile);
+        if (state.profile.capacity) {
+          if (state.profile.capacity.linesPerPart == null && state.profile.capacity.ayahsPerPart) {
+            state.profile.capacity.linesPerPart = Math.min(50, Math.max(1, Number(state.profile.capacity.ayahsPerPart) || 5));
+          }
+          state.profile.capacity = Object.assign(DEFAULT_STATE().profile.capacity, state.profile.capacity);
+        }
       }
     } catch (e) { /* état corrompu : on repart à neuf */ }
     if (!state) state = DEFAULT_STATE();

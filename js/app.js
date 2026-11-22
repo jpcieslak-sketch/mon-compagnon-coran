@@ -71,7 +71,7 @@
       p.capacity.listen = Math.max(1, Number($("#ob-listen").value) || 5);
       p.capacity.read = Math.max(1, Number($("#ob-read").value) || 10);
       p.capacity.minutes = Math.max(5, Number($("#ob-minutes").value) || 15);
-      p.capacity.ayahsPerPart = Math.max(1, Number($("#ob-ayahs").value) || 10);
+      p.capacity.linesPerPart = Math.min(50, Math.max(1, Number($("#ob-ayahs").value) || 5));
       p.goalPerWeek = Math.max(1, Number($("#ob-goal").value) || 1);
       p.courseWeekday = Number($("#ob-weekday").value);
       const ym = $("#ob-start").value;
@@ -321,6 +321,15 @@
       $("#cal-from").value = "";
       $("#cal-to").value = "";
     }
+    const updateLineHint = () => {
+      const id = Number($("#cal-surah").value);
+      const lp = (state.profile.capacity && state.profile.capacity.linesPerPart) || 5;
+      const v = Schedule.versesForLines(id, lp);
+      const L = String(Math.round(Schedule.surahLines(id) * 4) / 4).replace(".", ",");
+      $("#cal-linehint").textContent = `${SURAHS[id - 1].name} ≈ ${L} ligne(s) — une séance ≈ ${v} verset(s)`;
+    };
+    $("#cal-surah").onchange = updateLineHint;
+    updateLineHint();
     $("#calendar-editor").classList.remove("hidden");
     $("#cal-cancel").onclick = () => $("#calendar-editor").classList.add("hidden");
     $("#cal-erase").onclick = () => {
@@ -393,7 +402,7 @@
     $("#set-evening").value = p.reminders.evening;
     $("#set-listen").value = p.capacity.listen;
     $("#set-read").value = p.capacity.read;
-    $("#set-ayahs").value = p.capacity.ayahsPerPart;
+    $("#set-ayahs").value = p.capacity.linesPerPart || 5;
     $("#set-minutes").value = p.capacity.minutes;
     $("#set-goal").value = p.goalPerWeek;
     $("#set-notify").classList.toggle("done", p.reminders.enabled);
@@ -404,7 +413,7 @@
         p.reminders.evening = $("#set-evening").value || p.reminders.evening;
         p.capacity.listen = Math.max(1, Number($("#set-listen").value) || 5);
         p.capacity.read = Math.max(1, Number($("#set-read").value) || 10);
-        p.capacity.ayahsPerPart = Math.max(1, Number($("#set-ayahs").value) || 10);
+        p.capacity.linesPerPart = Math.max(1, Number($("#set-ayahs").value) || 5);
         p.capacity.minutes = Math.max(5, Number($("#set-minutes").value) || 15);
         p.goalPerWeek = Math.max(1, Number($("#set-goal").value) || 1);
         Store.save();

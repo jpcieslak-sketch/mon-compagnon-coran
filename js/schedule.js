@@ -97,8 +97,31 @@ const Schedule = (() => {
   }
 
   /* Remplissage automatique du programme annuel avec les sourates/versets à apprendre */
+  /* Lignes approximatives que chaque sourate occupe dans le mushaf standard de Médine (604 pages, ~15 lignes/page),
+     déduites des pages de début. Les sourates qui partagent une page (la fin du mushaf) ont une estimation dédiée. */
+  const TAIL_LINES = { 82: 1.5, 83: 4, 86: 2, 87: 2.5, 91: 2, 92: 3, 93: 2, 94: 1.5, 95: 1.5, 96: 3, 97: 0.75, 98: 3,
+                       99: 1.5, 100: 2.5, 101: 2.5, 102: 1.5, 103: 0.75, 104: 1.5, 105: 1, 106: 1, 107: 1.5, 108: 0.75,
+                       109: 1.5, 110: 0.75, 111: 1, 112: 0.75, 113: 1, 114: 1 };
+  const SURAH_LINES = SURAHS.map((s, i) => {
+    const pages = (typeof SURAH_START_PAGES !== "undefined") ? SURAH_START_PAGES : [];
+    const here = pages[i] || 1;
+    const next = pages[i + 1];
+    const shared = (i > 0 && pages[i - 1] === here) || next === here;
+    if (shared) return TAIL_LINES[i + 1] || 2;
+    return (next && next > here ? next - here : 1) * 15;
+  });
+
+  function surahLines(id) { return SURAH_LINES[id - 1]; }
+
+  /* Nombre de versets à apprendre pour couvrir ~lines lignes de cette sourate (arrondi au verset). */
+  function versesForLines(id, lines) {
+    const total = SURAHS[id - 1].ayahs;
+    const L = SURAH_LINES[id - 1];
+    return Math.min(total, Math.max(1, Math.round(lines * total / L)));
+  }
+
   function planAutoFill(state, dateISO) {
-    const partSize = Math.max(1, (state.profile.capacity && state.profile.capacity.ayahsPerPart) || 10);
+    const partLines = Math.max(1, (state.profile.capacity && state.profile.capacity.linesPerPart) || 5);
     const dates = Object.keys(state.calendar).filter(d =>
       d >= dateISO && state.calendar[d].course && !state.calendar[d].assignment
     ).sort();
@@ -116,7 +139,7 @@ const Schedule = (() => {
       }
       if (!target) break;
       const total = SURAHS[target.surahId - 1].ayahs;
-      const toV = Math.min(fromV + partSize - 1, total);
+      const toV = Math.min(fromV + versesForLines(target.surahId, partLines) - 1, total);
       state.calendar[d].assignment = { surahId: target.surahId, from: fromV, to: toV };
       placed++;
     }
@@ -228,7 +251,8 @@ const Schedule = (() => {
 
   return { toISO, fromISO, today, addDays, daysBetween, frenchDate, yearRange, generateCourseDays,
            surahState, setStatus, reviewDone, reviewForgot, dailyTasks, progression, streak, weekPlan,
-           queue, currentAssignment, planAutoFill, portionDone, weekTemplate, portionLabel };
+           queue, currentAssignment, planAutoFill, portionDone, weekTemplate, portionLabel,
+           surahLines, versesForLines };
 })();
 
 if (typeof module !== "undefined") { module.exports = { Schedule }; }
